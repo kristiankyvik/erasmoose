@@ -36,7 +36,7 @@ type Meta {
 }
 
 type Query {
-  allUnis(first: Int, skip: Int) : [University]
+  allUnis(first: Int, skip: Int, searchKey: String): [University]
   _allUnisMeta: Meta
 }
 
@@ -54,7 +54,7 @@ schema {
 
 let resolvers;
 let schema;
-let hassetup = false;
+let hasSetup = false;
 
 const setup = async () => {
 
@@ -63,8 +63,11 @@ const setup = async () => {
   resolvers = {
     Query: {
       allUnis: async (whot, opts) => {
+        console.log("opts", opts)
         return await db.collection("universities").find(
-          {},
+          {
+            name: new RegExp(opts.searchKey)
+          },
           {
             limit: opts.first,
             skip: opts.skip,
@@ -73,9 +76,9 @@ const setup = async () => {
         ).toArray();
       },
       _allUnisMeta: async () => {
-        const count = await db.collection("universities").count();
+        const count = await db.collection("universities").count(); 
         return { count };
-      },
+      }
     },
     Mutation: {
       updateUniversity: async (whot, opts) => {
@@ -93,12 +96,12 @@ const setup = async () => {
     resolvers,
     logger: console,
   });
-  hassetup = true;
+  hasSetup = true;
 };
 
 module.exports = cors( async (req, res) => {
 
-    if (!hassetup) {
+    if (!hasSetup) {
       await setup();
     }
 
