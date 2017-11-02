@@ -66,7 +66,10 @@ const setup = async () => {
         console.log("opts", opts)
         return await db.collection("universities").find(
           {
-            name: new RegExp(opts.searchKey)
+            name: {
+              '$regex' : opts.searchKey,
+              '$options' : 'i'
+            }
           },
           {
             limit: opts.first,
