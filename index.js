@@ -62,7 +62,7 @@ const setup = async () => {
 
   resolvers = {
     Query: {
-      allUnis: async (whot, opts) => {
+      allUnis: async (_, opts) => {
         console.log("opts", opts)
         return await db.collection("universities").find(
           {
