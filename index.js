@@ -63,13 +63,28 @@ const setup = async () => {
   resolvers = {
     Query: {
       allUnis: async (_, opts) => {
-        console.log("opts", opts)
         return await db.collection("universities").find(
           {
-            name: {
-              '$regex' : opts.searchKey,
-              '$options' : 'i'
-            }
+            $or: [ 
+              {
+                name: {
+                  '$regex': opts.searchKey,
+                  '$options': 'i'
+                }
+              }, 
+              {
+                country: {
+                  '$regex': opts.searchKey,
+                  '$options': 'i'
+                }
+              },
+              {
+                city: {
+                  '$regex': opts.searchKey,
+                  '$options': 'i'
+                }
+              }   
+            ]
           },
           {
             limit: opts.first,
