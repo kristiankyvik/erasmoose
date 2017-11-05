@@ -67,17 +67,17 @@ const setup = async () => {
           {
             $or: [ 
               {
-                name: {
-                  '$regex': opts.searchKey,
-                  '$options': 'i'
-                }
-              }, 
-              {
                 country: {
                   '$regex': opts.searchKey,
                   '$options': 'i'
                 }
               },
+              {
+                name: {
+                  '$regex': opts.searchKey,
+                  '$options': 'i'
+                }
+              }, 
               {
                 city: {
                   '$regex': opts.searchKey,
