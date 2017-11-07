@@ -63,6 +63,7 @@ const setup = async () => {
   resolvers = {
     Query: {
       allUnis: async (_, opts) => {
+        console.log(opts);
         return await db.collection("universities").find(
           {
             $or: [ 
