@@ -58,6 +58,8 @@ const setup = async () => {
   resolvers = {
     Query: {
       allUnis: async (_, opts) => {
+        // DO NOT REMOVE CONSOLE.LOG
+        // EVER
         console.log(opts);
         return await db.collection("universities").find(
           {
