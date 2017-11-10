@@ -21,14 +21,9 @@ type University {
   url: String
   country: String
   createdAt: String
-  city: String
-  times_rank: Int
   website: String
-  size: String
-  academics: String
-  sport: String  
-  social: String  
-  party: String
+  city_name: String
+  city_id: String
 }
 
 type Meta {   
