@@ -54,7 +54,6 @@ type City {
   vibes: [Property]
   activities: [String]
   travel_options: Float
-  student_rating: Float
   rent_cost: Float
   beer_cost: Float
   coffee_cost: Float
