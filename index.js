@@ -6,9 +6,8 @@ const { parse } = require('url')
 const { microGraphql, microGraphiql } = require('graphql-server-micro')
 const { makeExecutableSchema } = require('graphql-tools')
 const cors = require('micro-cors')();
-const { MongoClient } = require('mongodb');
-
-const prepare = (o) => {
+const { MongoClient, ObjectId } = require('mongodb');
+tconst prepare = (o) => {
   o._id = o._id["$oid"];
   return o;
 };
@@ -24,14 +23,53 @@ type University {
   website: String
   city_name: String
   city_id: String
+  uni_rating: Float
+  int_orientation: Float
+  workload: Float
+  fees: Float
+  opportunities: Float
+  openness: Float
+  clubs: Float
+  party: Float
+  female_percentage: Float
+  reviews_count: Float
+  main_disciplines: [Property]
+  languages: [Property]
+}
+
+type Property {
+  name: String
+  count: Int
 }
 
 type Meta {   
   count: Int
 }
 
+type City {
+  _id: String
+  name: String
+  country: String
+  votes: Int
+  vibes: [Property]
+  activities: [String]
+  travel_options: Float
+  student_rating: Float
+  rent_cost: Float
+  beer_cost: Float
+  coffee_cost: Float
+  kebab_cost: Float
+  monthly_cost: Float
+  culture: Float
+  if_you_like: [String]
+  reviews_count: Int
+  danceclub_cost: Float
+  city_rating: Float
+}
+
 type Query {
   allUnis(first: Int, skip: Int, searchKey: String): [University]
+  getCity(_id: String): City
   _allUnisMeta: Meta
 }
 
@@ -77,7 +115,7 @@ const setup = async () => {
                 }
               }, 
               {
-                city: {
+                city_name: {
                   '$regex': opts.searchKey,
                   '$options': 'i'
                 }
@@ -91,10 +129,13 @@ const setup = async () => {
           }
         ).toArray();
       },
+      getCity: async (_, opts) => {
+        return await db.collection("cities").findOne({_id: opts._id ? new ObjectId(opts._id) : null })
+      },
       _allUnisMeta: async () => {
         const count = await db.collection("universities").count(); 
         return { count };
-      }
+      },
     },
     Mutation: {
       updateUniversity: async (whot, opts) => {
@@ -110,7 +151,7 @@ const setup = async () => {
   schema = makeExecutableSchema({
     typeDefs,
     resolvers,
-    logger: console,
+    // logger: console,
   });
   hasSetup = true;
 };
