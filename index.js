@@ -64,6 +64,7 @@ type City {
   reviews_count: Int
   danceclub_cost: Float
   city_rating: Float
+  leisure: String
 }
 
 type Query {
