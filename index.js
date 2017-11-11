@@ -7,7 +7,7 @@ const { microGraphql, microGraphiql } = require('graphql-server-micro')
 const { makeExecutableSchema } = require('graphql-tools')
 const cors = require('micro-cors')();
 const { MongoClient, ObjectId } = require('mongodb');
-tconst prepare = (o) => {
+const prepare = (o) => {
   o._id = o._id["$oid"];
   return o;
 };
