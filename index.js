@@ -125,7 +125,7 @@ const setup = async () => {
           {
             limit: opts.first,
             skip: opts.skip,
-            sort: { name: 1 },
+            sort: { uni_rating: -1 },
           }
         ).toArray();
       },
