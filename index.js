@@ -73,8 +73,13 @@ type Query {
   _allUnisMeta: Meta
 }
 
+type Success {
+  ok: Boolean
+}
+
 type Mutation {
   updateUniversity(_id: String, votes: Int): University
+  sendFeedback(email: String, message: String): Success
 }
 
 # we need to tell the server which types represent the root query
@@ -145,6 +150,13 @@ const setup = async () => {
         {
           "$set": { votes: opts.votes }
         });
+      },
+      sendFeedback: async (whot, opts) => {
+        const as = await db.collection("feedbacks").insertOne({
+          email: opts.email,
+          message: opts.message
+        });
+        return {ok: true};
       },
     },
   };
