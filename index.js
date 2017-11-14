@@ -102,7 +102,7 @@ const setup = async () => {
     Query: {
       allUnis: async (_, opts) => {
         // DO NOT REMOVE CONSOLE.LOG
-        // EVER
+        // EVER -> ALRIGHT BRO CHILL -> KINDA FREAKED ME OUT THIS MESSAGE
         console.log(opts);
         return await db.collection("universities").find(
           {
