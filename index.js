@@ -35,6 +35,8 @@ type University {
   reviews_count: Float
   main_disciplines: [Property]
   languages: [Property]
+  difficulty: Float
+  weekly_hours: Float
 }
 
 type Property {
@@ -51,6 +53,7 @@ type City {
   name: String
   country: String
   votes: Int
+  culture: Float
   vibes: [Property]
   activities: [String]
   travel_options: Float
@@ -64,7 +67,11 @@ type City {
   reviews_count: Int
   danceclub_cost: Float
   city_rating: Float
+  student_friendliness: Float
   leisure: String
+  nightlife: Float
+  gastronomy: Float
+  sports: Float
 }
 
 type Query {
