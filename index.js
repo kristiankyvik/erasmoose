@@ -32,22 +32,19 @@ type University {
   clubs: Float
   party: Float
   female_percentage: Float
-  reviews_count: Float
+  reviews_count: Int
   main_disciplines: [Property]
   languages: [Property]
   difficulty: Float
   weekly_hours: Float
 }
-
 type Property {
   name: String
   count: Int
 }
-
 type Meta {   
   count: Int
 }
-
 type City {
   _id: String
   name: String
@@ -73,11 +70,19 @@ type City {
   gastronomy: Float
   sports: Float
 }
-
+type UniReviews { 
+  allReviews: Int
+  allUnisReviewed: Int
+}
+type AllUnisWithReview {
+  reviews_count: Int
+}
 type Query {
   allUnis(first: Int, skip: Int, searchKey: String): [University]
   getCity(_id: String): City
   _allUnisMeta: Meta
+  allUnisWithReview: [AllUnisWithReview]
+  allReviews: UniReviews
 }
 
 type Success {
@@ -148,22 +153,35 @@ const setup = async () => {
         const count = await db.collection("universities").count(); 
         return { count };
       },
+      allUnisWithReview: async () => {
+        return await db.collection("universities").find(
+          { 
+            reviews_count: { $gt: 0 } 
+          }
+        ).toArray();
+      },
+      allReviews: async () => {
+        return await db.collection('universities').aggregate(
+          { $match: { reviews_count: { $gt: 0 } } },
+          { $group: { _id: '', allReviews: { $sum: "$reviews_count" }, allUnisReviewed: { $sum: 1 } } }
+        )
+      }
     },
     Mutation: {
       updateUniversity: async (whot, opts) => {
         return await db.collection("universities").update({
           _id: opts._id
         },
-        {
-          "$set": { votes: opts.votes }
-        });
+          {
+            "$set": { votes: opts.votes }
+          });
       },
       sendFeedback: async (whot, opts) => {
         const as = await db.collection("feedbacks").insertOne({
           email: opts.email,
           message: opts.message
         });
-        return {ok: true};
+        return { ok: true };
       },
     },
   };
@@ -175,17 +193,17 @@ const setup = async () => {
   hasSetup = true;
 };
 
-module.exports = cors( async (req, res) => {
+module.exports = cors(async (req, res) => {
 
-    if (!hasSetup) {
-      await setup();
-    }
+  if (!hasSetup) {
+    await setup();
+  }
 
-    const url = parse(req.url)
-    if(url.pathname === '/graphiql') {
-        return microGraphiql({endpointURL: '/'})(req, res)
-    }
+  const url = parse(req.url)
+  if (url.pathname === '/graphiql') {
+    return microGraphiql({ endpointURL: '/' })(req, res)
+  }
 
-    return microGraphql({ schema })(req, res)
-    
+  return microGraphql({ schema })(req, res)
+
 });
