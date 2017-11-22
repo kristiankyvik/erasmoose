@@ -70,19 +70,16 @@ type City {
   gastronomy: Float
   sports: Float
 }
-type UniReviews { 
-  allReviews: Int
-  allUnisReviewed: Int
+type ReviewsMeta { 
+  unisCount: Int,
+  reviewsCount: Int
 }
-type AllUnisWithReview {
-  reviews_count: Int
-}
+
 type Query {
   allUnis(first: Int, skip: Int, searchKey: String): [University]
   getCity(_id: String): City
   _allUnisMeta: Meta
-  allUnisWithReview: [AllUnisWithReview]
-  allReviews: UniReviews
+  _allReviewsMeta: ReviewsMeta
 }
 
 type Success {
@@ -153,18 +150,27 @@ const setup = async () => {
         const count = await db.collection("universities").count(); 
         return { count };
       },
-      allUnisWithReview: async () => {
-        return await db.collection("universities").find(
+      _allReviewsMeta: async () => {
+        const metaCursor =  await db.collection('universities').aggregate([
           { 
-            reviews_count: { $gt: 0 } 
+            $match: { 
+              reviews_count: { $gt: 0 } 
+            } 
+          },
+          { 
+            $group: { 
+              _id: '', 
+              reviewsCount: { 
+                $sum: "$reviews_count" 
+              }, 
+              unisCount: { 
+                $sum: 1 
+              } 
+            } 
           }
-        ).toArray();
-      },
-      allReviews: async () => {
-        return await db.collection('universities').aggregate(
-          { $match: { reviews_count: { $gt: 0 } } },
-          { $group: { _id: '', allReviews: { $sum: "$reviews_count" }, allUnisReviewed: { $sum: 1 } } }
-        )
+        ]).toArray();
+
+        return metaCursor[0];
       }
     },
     Mutation: {
