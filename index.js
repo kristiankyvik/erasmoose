@@ -37,6 +37,7 @@ type University {
   languages: [Property]
   difficulty: AverageProperty
   weekly_hours: AverageProperty
+  overall_rating: Float
 }
 type Property {
   name: String
