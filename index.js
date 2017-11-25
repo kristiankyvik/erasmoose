@@ -141,7 +141,7 @@ const setup = async () => {
             ]
           },
           {
-            sort: { uni_rating: -1 },
+            sort: { overall_rating: -1 },
             limit: opts.first,
             skip: opts.skip,
           }
