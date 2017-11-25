@@ -19,7 +19,7 @@ jobs:
       - checkout
 
       # Install globals
-      - run: sudo npm i -g now --unsafe-perm
+      - run: sudo npm i -g now@canary --unsafe-perm
 
       # BACKEND STUFF
       - run: yarn install
