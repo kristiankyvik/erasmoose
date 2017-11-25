@@ -23,23 +23,27 @@ type University {
   website: String
   city_name: String
   city_id: String
-  uni_rating: Float
-  int_orientation: Float
-  workload: Float
-  fees: Float
-  opportunities: Float
-  openness: Float
-  clubs: Float
-  party: Float
-  female_percentage: Float
+  uni_rating: AverageProperty
+  int_orientation: AverageProperty
+  workload: AverageProperty
+  fees: AverageProperty
+  opportunities: AverageProperty
+  openness: AverageProperty
+  clubs: AverageProperty
+  party: AverageProperty
+  female_percentage: AverageProperty
   reviews_count: Int
   main_disciplines: [Property]
   languages: [Property]
-  difficulty: Float
-  weekly_hours: Float
+  difficulty: AverageProperty
+  weekly_hours: AverageProperty
 }
 type Property {
   name: String
+  count: Int
+}
+type AverageProperty {
+  value: Float
   count: Int
 }
 type Meta {   
@@ -50,25 +54,24 @@ type City {
   name: String
   country: String
   votes: Int
-  culture: Float
   vibes: [Property]
   activities: [String]
-  travel_options: Float
-  rent_cost: Float
-  beer_cost: Float
-  coffee_cost: Float
-  kebab_cost: Float
-  monthly_cost: Float
-  culture: Float
+  travel_options: AverageProperty
+  rent_cost: AverageProperty
+  beer_cost: AverageProperty
+  coffee_cost: AverageProperty
+  kebab_cost: AverageProperty
+  monthly_cost: AverageProperty
+  culture: AverageProperty
   if_you_like: [String]
   reviews_count: Int
-  danceclub_cost: Float
-  city_rating: Float
-  student_friendliness: Float
+  danceclub_cost: AverageProperty
+  city_rating: AverageProperty
+  student_friendliness: AverageProperty
   leisure: String
-  nightlife: Float
-  gastronomy: Float
-  sports: Float
+  nightlife: AverageProperty
+  gastronomy: AverageProperty
+  sports: AverageProperty
 }
 type ReviewsMeta { 
   unisCount: Int,
@@ -154,14 +157,14 @@ const setup = async () => {
         const metaCursor =  await db.collection('universities').aggregate([
           { 
             $match: { 
-              reviews_count: { $gt: 0 } 
+              'uni_rating.count': { $gt: 0 } 
             } 
           },
           { 
             $group: { 
               _id: '', 
               reviewsCount: { 
-                $sum: "$reviews_count" 
+                $sum: "$uni_rating.count"
               }, 
               unisCount: { 
                 $sum: 1 
@@ -213,3 +216,11 @@ module.exports = cors(async (req, res) => {
   return microGraphql({ schema })(req, res)
 
 });
+
+
+// type Query {
+//   allUnis(first: Int, skip: Int, searchKey: String): [University]
+//   getCity(_id: String): City
+//   _allUnisMeta: Meta
+//   _allReviewsMeta: ReviewsMeta
+// }
