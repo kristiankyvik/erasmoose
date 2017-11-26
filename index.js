@@ -7,6 +7,7 @@ const { microGraphql, microGraphiql } = require('graphql-server-micro')
 const { makeExecutableSchema } = require('graphql-tools')
 const cors = require('micro-cors')();
 const { MongoClient, ObjectId } = require('mongodb');
+
 const prepare = (o) => {
   o._id = o._id["$oid"];
   return o;
@@ -50,6 +51,7 @@ type AverageProperty {
 type Meta {   
   count: Int
 }
+
 type City {
   _id: String
   name: String
@@ -79,11 +81,19 @@ type ReviewsMeta {
   reviewsCount: Int
 }
 
+type Review {
+  uni_review: String
+  city_review: String
+  date_submit: String
+  _id: String
+}
+
 type Query {
   allUnis(first: Int, skip: Int, searchKey: String): [University]
   getCity(_id: String): City
   _allUnisMeta: Meta
   _allReviewsMeta: ReviewsMeta
+  getReviews(city_id: String, university_id: String): [Review]
 }
 
 type Success {
@@ -92,7 +102,7 @@ type Success {
 
 type Mutation {
   updateUniversity(_id: String, votes: Int): University
-  sendFeedback(email: String, message: String): Success
+  sendFeedback(email: String, messages: String): Success
 }
 
 # we need to tell the server which types represent the root query
@@ -153,6 +163,12 @@ const setup = async () => {
       _allUnisMeta: async () => {
         const count = await db.collection("universities").count(); 
         return { count };
+      },
+      getReviews: async (_, opts) => {
+        const attrib = Object.keys(opts)[0] == 'city_id' ? 'city_review' : 'uni_review';
+        opts[attrib] = {$exists: true};
+        opts["$where"] = `this.${attrib}.length > 40`; 
+        return await db.collection("reviews").find(opts, {limit: 3}).toArray();
       },
       _allReviewsMeta: async () => {
         const metaCursor =  await db.collection('universities').aggregate([
@@ -217,11 +233,3 @@ module.exports = cors(async (req, res) => {
   return microGraphql({ schema })(req, res)
 
 });
-
-
-// type Query {
-//   allUnis(first: Int, skip: Int, searchKey: String): [University]
-//   getCity(_id: String): City
-//   _allUnisMeta: Meta
-//   _allReviewsMeta: ReviewsMeta
-// }
