@@ -150,7 +150,7 @@ const setup = async () => {
             ]
           },
           {
-            sort: { uni_recommendation: -1 },
+            sort: { "uni_recommendation.value": -1 },
             limit: opts.first,
             skip: opts.skip,
           }
