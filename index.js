@@ -24,7 +24,7 @@ type University {
   website: String
   city_name: String
   city_id: String
-  uni_rating: AverageProperty
+  uni_recommendation: AverageProperty
   int_orientation: AverageProperty
   workload: AverageProperty
   fees: AverageProperty
@@ -33,12 +33,11 @@ type University {
   clubs: AverageProperty
   party: AverageProperty
   female_percentage: AverageProperty
-  reviews_count: Int
+  review_count: Int
   main_disciplines: [Property]
   languages: [Property]
   difficulty: AverageProperty
   weekly_hours: AverageProperty
-  overall_rating: Float
 }
 type Property {
   name: String
@@ -67,9 +66,9 @@ type City {
   monthly_cost: AverageProperty
   culture: AverageProperty
   if_you_like: [String]
-  reviews_count: Int
+  review_count: Int
   danceclub_cost: AverageProperty
-  city_rating: AverageProperty
+  city_recommendation: AverageProperty
   student_friendliness: AverageProperty
   leisure: String
   nightlife: AverageProperty
@@ -78,7 +77,7 @@ type City {
 }
 type ReviewsMeta { 
   unisCount: Int,
-  reviewsCount: Int
+  reviewCount: Int
 }
 
 type Review {
@@ -151,7 +150,7 @@ const setup = async () => {
             ]
           },
           {
-            sort: { overall_rating: -1 },
+            sort: { uni_recommendation: -1 },
             limit: opts.first,
             skip: opts.skip,
           }
@@ -174,14 +173,14 @@ const setup = async () => {
         const metaCursor =  await db.collection('universities').aggregate([
           { 
             $match: { 
-              'uni_rating.count': { $gt: 0 } 
+              'review_count': { $gt: 0 } 
             } 
           },
           { 
             $group: { 
               _id: '', 
-              reviewsCount: { 
-                $sum: "$uni_rating.count"
+              reviewCount: { 
+                $sum: "$review_count"
               }, 
               unisCount: { 
                 $sum: 1 
