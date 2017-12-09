@@ -167,7 +167,7 @@ const setup = async () => {
         const attrib = Object.keys(opts)[0] == 'city_id' ? 'city_review' : 'uni_review';
         opts[attrib] = {$exists: true};
         opts["$where"] = `this.${attrib}.length > 40`; 
-        return await db.collection("reviews").find(opts, {limit: 3}).toArray();
+        return await db.collection("reviews").find(opts, {}).toArray();
       },
       _allReviewsMeta: async () => {
         const metaCursor =  await db.collection('universities').aggregate([
