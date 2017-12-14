@@ -119,7 +119,7 @@ let hasSetup = false;
 const setup = async () => {
 
   const db = await MongoClient.connect(process.env.MLAB_URL);
-
+        
   resolvers = {
     Query: {
       allUnis: async (_, opts) => {
