@@ -93,7 +93,6 @@ type Review {
 
 type Query {
   allUnis(first: Int, skip: Int, searchKey: String): [University]
-  getCity(_id: String): City
   _allUnisMeta: Meta
   _allReviewsMeta: ReviewsMeta
   getReviews(city_id: String, university_id: String): [Review]
@@ -225,26 +224,21 @@ const setup = async () => {
          $sort: { "overallRating": -1 }
        },
        {
-         $limit: opts.first
+         $skip: opts.skip
        },
        {
-         $skip: opts.skip
-       }
+         $limit: opts.first
+       },
    ];
   }
 
   resolvers = {
     Query: {
       allUnis: async (_, opts) => {
-        // DO NOT REMOVE CONSOLE.LOG
-        // EVER -> ALRIGHT BRO CHILL -> KINDA FREAKED ME OUT THIS MESSAGE
-        console.log(opts);
+
         return await db.collection("universities").aggregate(
           getAllUnisQueryObject(opts)
         ).toArray();
-      },
-      getCity: async (_, opts) => {
-        return await db.collection("cities").findOne({_id: opts._id ? new ObjectId(opts._id) : null })
       },
       _allUnisMeta: async () => {
         const count = await db.collection("universities").count(); 
