@@ -38,6 +38,9 @@ type University {
   languages: [Property]
   difficulty: AverageProperty
   weekly_hours: AverageProperty
+  cityRating: Float
+  uniRating: Float
+  overallRating: Float
 }
 type Property {
   name: String
@@ -120,40 +123,124 @@ const setup = async () => {
 
   const db = await MongoClient.connect(process.env.MLAB_URL);
         
+  //This function
+  //TODO: This needs to be refactored and put into another file
+  const getAllUnisQueryObject = (opts) => {
+    /*
+      This object defines the query (depending on the opts).
+      1) city collection is joined with uni collection.
+      2) result is matched with search key from user input 
+      3) city rating, uni rating and overall rating is created as new fields 
+      4) list is sorted and other options are applied 
+
+    */
+   return [
+       {
+         $lookup:
+           {
+             from: "cities",
+             localField: "city_id",
+             foreignField: "_id",
+             as: "city"
+           }
+       },
+       {
+         $unwind: "$city"
+       },
+       {
+         $match: {
+           $or: [
+             {
+               country: {
+                 '$regex': opts.searchKey,
+                 '$options': 'i'
+               }
+             },
+             {
+               name: {
+                 '$regex': opts.searchKey,
+                 '$options': 'i'
+               }
+             },
+             {
+               city_name: {
+                 '$regex': opts.searchKey,
+                 '$options': 'i'
+               }
+             }
+           ]
+         }
+       },
+       {
+         $addFields: {
+           uniRating: {
+            $avg: [
+              "$int_orientation.value",
+              "$difficulty.value",
+              "$opportunities.value",
+              "$openness.value",
+              "$clubs.value",
+              "$party.value",
+              "$uni_recommendation.value",
+              "$uni_recommendation.value",
+              "$uni_recommendation.value",
+              "$uni_recommendation.value"
+            ]
+          },
+          cityRating: {
+            $cond: { 
+              if: { 
+                $eq: ["$review_count", 0] 
+              }, 
+              then: null, 
+              else: {
+                $avg: [
+                  "$city.travel_options.value",
+                  "$city.culture.value",
+                  "$city.student_friendliness.value",
+                  "$city.sports.value",
+                  "$city.nightlife.value",
+                  "$city.gastronomy.value",
+                  "$city.city_recommendation.value",
+                  "$city.city_recommendation.value",
+                  "$city.city_recommendation.value",
+                  "$city.city_recommendation.value"
+                ]
+              }
+            }
+          }
+        }
+       },
+       {
+         $addFields: {
+          overallRating: {
+            $avg: [
+              "$cityRating",
+              "$uniRating"
+            ]
+          }
+        }
+       },
+       {
+         $sort: { "overallRating": -1 }
+       },
+       {
+         $limit: opts.first
+       },
+       {
+         $skip: opts.skip
+       }
+   ];
+  }
+
   resolvers = {
     Query: {
       allUnis: async (_, opts) => {
         // DO NOT REMOVE CONSOLE.LOG
         // EVER -> ALRIGHT BRO CHILL -> KINDA FREAKED ME OUT THIS MESSAGE
         console.log(opts);
-        return await db.collection("universities").find(
-          {
-            $or: [ 
-              {
-                country: {
-                  '$regex': opts.searchKey,
-                  '$options': 'i'
-                }
-              },
-              {
-                name: {
-                  '$regex': opts.searchKey,
-                  '$options': 'i'
-                }
-              }, 
-              {
-                city_name: {
-                  '$regex': opts.searchKey,
-                  '$options': 'i'
-                }
-              }   
-            ]
-          },
-          {
-            sort: { "uni_recommendation.value": -1 },
-            limit: opts.first,
-            skip: opts.skip,
-          }
+        return await db.collection("universities").aggregate(
+          getAllUnisQueryObject(opts)
         ).toArray();
       },
       getCity: async (_, opts) => {
