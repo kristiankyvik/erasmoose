@@ -41,6 +41,7 @@ type University {
   cityRating: Float
   uniRating: Float
   overallRating: Float
+  city: City
 }
 type Property {
   name: String
@@ -123,7 +124,6 @@ const setup = async () => {
 
   const db = await MongoClient.connect(process.env.MLAB_URL);
         
-  //This function
   //TODO: This needs to be refactored and put into another file
   const getAllUnisQueryObject = (opts) => {
     /*
