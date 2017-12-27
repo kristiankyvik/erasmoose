@@ -139,7 +139,7 @@ const setup = async () => {
       allUnis: async (_, opts) => {
         // DO NOT REMOVE CONSOLE.LOG
         // EVER -> ALRIGHT BRO CHILL -> KINDA FREAKED ME OUT THIS MESSAGE
-        console.log(opts);
+        console.log(JSON.stringify(opts));  
         return await db.collection("universities").aggregate(
           createQueryObject(opts)
         ).toArray();
@@ -173,7 +173,6 @@ const setup = async () => {
             } 
           }
         ]).toArray();
-
         return metaCursor[0];
       }
     },
