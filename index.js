@@ -137,7 +137,9 @@ const setup = async () => {
   resolvers = {
     Query: {
       allUnis: async (_, opts) => {
-        console.log("hallo")
+        // DO NOT REMOVE CONSOLE.LOG
+        // EVER -> ALRIGHT BRO CHILL -> KINDA FREAKED ME OUT THIS MESSAGE
+        console.log(opts);
         return await db.collection("universities").aggregate(
           createQueryObject(opts)
         ).toArray();
