@@ -104,7 +104,7 @@ type Success {
 
 type Mutation {
   updateUniversity(_id: String, votes: Int): University
-  sendFeedback(email: String, messages: String): Success
+  sendFeedback(email: String, message: String): Success
 }
 
 # we need to tell the server which types represent the root query
