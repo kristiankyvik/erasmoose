@@ -55,6 +55,10 @@ type Meta {
   count: Int
 }
 
+type DistinctCountries {
+  countries: [String]
+}
+
 type City {
   _id: String
   name: String
@@ -96,6 +100,7 @@ type Query {
   _allUnisMeta: Meta
   _allReviewsMeta: ReviewsMeta
   getReviews(city_id: String, university_id: String): [Review]
+  distinctCountries: [String]
 }
 
 type Success {
@@ -139,8 +144,6 @@ const setup = async () => {
       allUnis: async (_, opts) => {
         // DO NOT REMOVE CONSOLE.LOG
         // EVER -> ALRIGHT BRO CHILL -> KINDA FREAKED ME OUT THIS MESSAGE
-        console.log(JSON.stringify(opts)); 
-        console.log(JSON.stringify(createQueryObject(opts)));
         return await db.collection("universities").aggregate(
           createQueryObject(opts)
         ).toArray();
@@ -148,6 +151,9 @@ const setup = async () => {
       _allUnisMeta: async () => {
         const count = await db.collection("universities").count(); 
         return { count };
+      },
+      distinctCountries: async () => {
+        return await db.collection("cities").distinct('country');
       },
       getReviews: async (_, opts) => {
         const attrib = Object.keys(opts)[0] == 'city_id' ? 'city_review' : 'uni_review';
