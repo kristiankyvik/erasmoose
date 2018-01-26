@@ -59,6 +59,14 @@ type DistinctCountries {
   countries: [String]
 }
 
+type DistinctLanguages {
+  languages: [String]
+}
+
+type DistinctAreas {
+  areas: [String]
+}
+
 type City {
   _id: String
   name: String
@@ -101,6 +109,8 @@ type Query {
   _allReviewsMeta: ReviewsMeta
   getReviews(city_id: String, university_id: String): [Review]
   distinctCountries: [String]
+  distinctLanguages: [String]
+  distinctAreas: [String]
 }
 
 type Success {
@@ -156,6 +166,12 @@ const setup = async () => {
       },
       distinctCountries: async () => {
         return await db.collection("cities").distinct('country');
+      },
+      distinctLanguages: async () => {
+        return await db.collection("universities").distinct('languages.name');
+      },
+      distinctAreas: async () => {
+        return await db.collection("universities").distinct('main_disciplines.name');
       },
       getReviews: async (_, opts) => {
         const attrib = Object.keys(opts)[0] == 'city_id' ? 'city_review' : 'uni_review';
