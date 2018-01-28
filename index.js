@@ -42,6 +42,10 @@ type University {
   uniRating: Float
   overallRating: Float
   city: City
+  easiness: Float
+  cheapness: Float
+  free_time: Float
+  uni_cheapness: Float
 }
 type Property {
   name: String
@@ -90,6 +94,7 @@ type City {
   nightlife: AverageProperty
   gastronomy: AverageProperty
   sports: AverageProperty
+  city_cheapness: Float
 }
 type ReviewsMeta { 
   unisCount: Int,
@@ -147,7 +152,7 @@ const setup = async () => {
         $limit: opts.first
       }
     ])
-  )
+  );
 
   resolvers = {
 
