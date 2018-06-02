@@ -13,6 +13,7 @@ const prepare = (o) => {
   return o;
 };
 
+
 const typeDefs = `
 type University {   
   _id: String
