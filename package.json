@@ -15,7 +15,7 @@
     "graphql-tools": "^2.7.2",
     "micro": "^9.0.1",
     "micro-cors": "0.0.4",
-    "mongodb": "^2.2.33",
+    "mongodb": "^3.0.10",
     "react-apollo": "^2.0.0",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
