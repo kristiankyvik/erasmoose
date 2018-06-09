@@ -139,13 +139,19 @@ schema {
 
 let resolvers;
 let schema;
+let hasSetup=false;
 
-MongoClient.connect(process.env.MLAB_URL, (err, client) => {
+const setup = async() => {
+
+  let client = await MongoClient.connect(process.env.MLAB_URL)
+  
+  console.log('hallo')
+  console.log(client)
   console.log(process.env.MLAB_URL)
   console.log(err)
   var db = client.db('unirank');
 
-  const createQueryObject = (opts) => (
+  const createQueryObject = () => (
     JSON.parse(opts.searchObj).concat([
       {
         $skip: opts.skip
@@ -222,15 +228,20 @@ MongoClient.connect(process.env.MLAB_URL, (err, client) => {
       },
     },
   };
+
   schema = makeExecutableSchema({
     typeDefs,
     resolvers,
     logger: false,
   });
-  hasSetup = true;
-})
 
-module.exports = cors((req, res) => {
+  hasSetup = true;
+}
+
+module.exports = cors( async (req, res) => {
+  if(!hasSetup){
+    await setup()
+  }
 
   const url = parse(req.url)
   if (url.pathname === '/graphiql') {
