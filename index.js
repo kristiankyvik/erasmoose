@@ -114,18 +114,24 @@ type Query {
   allUnis(first: Int, skip: Int, searchObj: String): [University]
   _allUnisMeta: Meta
   _allReviewsMeta: ReviewsMeta
-  getReviews(city_id: String, university_id: String): [Review]
   distinctCountries: [String]
   distinctLanguages: [String]
   distinctAreas: [String]
+  reviews(entity_id: String, type: String): [Review]
 }
 
 type Success {
   ok: Boolean
 }
 
+type UpdatedVotes {
+  entity_id: String
+  votes: Int
+  type: String
+}
+
 type Mutation {
-  updateVotes(_id: String, votes: Int, entity_id: String, type: String): [Review]
+  updateVotes(_id: String, votes: Int, entity_id: String, type: String): UpdatedVotes 
   sendFeedback(email: String, message: String): Success
 }
 
@@ -139,19 +145,15 @@ schema {
 
 let resolvers;
 let schema;
-let hasSetup=false;
 
-const setup = async() => {
-
-  let client = await MongoClient.connect(process.env.MLAB_URL)
+MongoClient.connect(process.env.MLAB_URL, (err, client) => {
   
   console.log('hallo')
   console.log(client)
   console.log(process.env.MLAB_URL)
-  console.log(err)
   var db = client.db('unirank');
 
-  const createQueryObject = () => (
+  const createQueryObject = (opts) => (
     JSON.parse(opts.searchObj).concat([
       {
         $skip: opts.skip
@@ -203,11 +205,24 @@ const setup = async() => {
           }
         ]).toArray();
         return metaCursor[0];
+      },
+      reviews: async (_, opts) => {
+        console.log("opts",opts);
+        const entity = await db.collection(opts.type).aggregate([
+          {
+            $match: {
+              '_id': new ObjectId(opts.entity_id)
+            }
+          }
+        ]).toArray();
+        return entity[0].reviews
       }
     },
     Mutation: {
       updateVotes: async (whot, opts) => {
-        const result = await db.collection(opts.type).update(
+        console.log("opts",opts);
+
+        await db.collection(opts.type).update(
           {
             "_id": new ObjectId(opts.entity_id),
             "reviews._id": new ObjectId(opts._id)
@@ -216,8 +231,19 @@ const setup = async() => {
             $set: { "reviews.$.votes": opts.votes }
           }
         );
+        result = db.collection(opts.type).find(
+          {
+            "_id": new ObjectId(opts.entity_id) 
+          }
+        )
+        
         console.log("result",result)
-        return opts.votes
+        // return result['reviews']
+        return { 
+           entity_id: opts.entity_id, 
+           votes: opts.votes,
+           type: opts.type
+        };
       },
       sendFeedback: async (whot, opts) => {
         const as = await db.collection("feedbacks").insertOne({
@@ -234,15 +260,10 @@ const setup = async() => {
     resolvers,
     logger: false,
   });
-
-  hasSetup = true;
-}
+})
 
 module.exports = cors( async (req, res) => {
-  if(!hasSetup){
-    await setup()
-  }
-
+  
   const url = parse(req.url)
   if (url.pathname === '/graphiql') {
     return microGraphiql({ endpointURL: '/' })(req, res)
