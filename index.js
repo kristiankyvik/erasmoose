@@ -47,6 +47,7 @@ type University {
   cheapness: Float
   free_time: Float
   uni_cheapness: Float
+  reviews: [Review]
 }
 type Property {
   name: String
@@ -103,28 +104,34 @@ type ReviewsMeta {
 }
 
 type Review {
-  uni_review: String
-  city_review: String
-  date_submit: String
   _id: String
+  text: String
+  votes: Int
+  date: String
 }
 
 type Query {
   allUnis(first: Int, skip: Int, searchObj: String): [University]
   _allUnisMeta: Meta
   _allReviewsMeta: ReviewsMeta
-  getReviews(city_id: String, university_id: String): [Review]
   distinctCountries: [String]
   distinctLanguages: [String]
   distinctAreas: [String]
+  reviews(entity_id: String, type: String): [Review]
 }
 
 type Success {
   ok: Boolean
 }
 
+type UpdatedVotes {
+  entity_id: String
+  votes: Int
+  type: String
+}
+
 type Mutation {
-  updateUniversity(_id: String, votes: Int): University
+  updateVotes(_id: String, votes: Int, entity_id: String, type: String): UpdatedVotes 
   sendFeedback(email: String, message: String): Success
 }
 
@@ -138,12 +145,14 @@ schema {
 
 let resolvers;
 let schema;
-let hasSetup = false;
 
-const setup = async () => {
+MongoClient.connect(process.env.MLAB_URL, (err, client) => {
+  
+  console.log('hallo')
+  console.log(client)
+  console.log(process.env.MLAB_URL)
+  var db = client.db('unirank');
 
-  const db = await MongoClient.connect(process.env.MLAB_URL);
-        
   const createQueryObject = (opts) => (
     JSON.parse(opts.searchObj).concat([
       {
@@ -159,15 +168,12 @@ const setup = async () => {
 
     Query: {
       allUnis: async (_, opts) => {
-        // DO NOT REMOVE CONSOLE.LOG
-        console.log(JSON.stringify(opts)); 
-        console.log(JSON.stringify(createQueryObject(opts)));
         return await db.collection("universities").aggregate(
           createQueryObject(opts)
         ).toArray();
       },
       _allUnisMeta: async () => {
-        const count = await db.collection("universities").count(); 
+        const count = await db.collection("universities").count();
         return { count };
       },
       distinctCountries: async () => {
@@ -179,42 +185,65 @@ const setup = async () => {
       distinctAreas: async () => {
         return await db.collection("universities").distinct('main_disciplines.name');
       },
-      getReviews: async (_, opts) => {
-        const attrib = Object.keys(opts)[0] == 'city_id' ? 'city_review' : 'uni_review';
-        opts[attrib] = {$exists: true};
-        opts["$where"] = `this.${attrib}.length > 40`; 
-        return await db.collection("reviews").find(opts, {}).toArray();
-      },
       _allReviewsMeta: async () => {
-        const metaCursor =  await db.collection('universities').aggregate([
-          { 
-            $match: { 
-              'review_count': { $gt: 0 } 
-            } 
+        const metaCursor = await db.collection('universities').aggregate([
+          {
+            $match: {
+              'review_count': { $gt: 0 }
+            }
           },
-          { 
-            $group: { 
-              _id: '', 
-              reviewCount: { 
+          {
+            $group: {
+              _id: '',
+              reviewCount: {
                 $sum: "$review_count"
-              }, 
-              unisCount: { 
-                $sum: 1 
-              } 
-            } 
+              },
+              unisCount: {
+                $sum: 1
+              }
+            }
           }
         ]).toArray();
         return metaCursor[0];
+      },
+      reviews: async (_, opts) => {
+        console.log("opts",opts);
+        const entity = await db.collection(opts.type).aggregate([
+          {
+            $match: {
+              '_id': new ObjectId(opts.entity_id)
+            }
+          }
+        ]).toArray();
+        return entity[0].reviews
       }
     },
     Mutation: {
-      updateUniversity: async (whot, opts) => {
-        return await db.collection("universities").update({
-          _id: opts._id
-        },
+      updateVotes: async (whot, opts) => {
+        console.log("opts",opts);
+
+        await db.collection(opts.type).update(
           {
-            "$set": { votes: opts.votes }
-          });
+            "_id": new ObjectId(opts.entity_id),
+            "reviews._id": new ObjectId(opts._id)
+          },
+          {
+            $set: { "reviews.$.votes": opts.votes }
+          }
+        );
+        result = db.collection(opts.type).find(
+          {
+            "_id": new ObjectId(opts.entity_id) 
+          }
+        )
+        
+        console.log("result",result)
+        // return result['reviews']
+        return { 
+           entity_id: opts.entity_id, 
+           votes: opts.votes,
+           type: opts.type
+        };
       },
       sendFeedback: async (whot, opts) => {
         const as = await db.collection("feedbacks").insertOne({
@@ -225,25 +254,22 @@ const setup = async () => {
       },
     },
   };
+
   schema = makeExecutableSchema({
     typeDefs,
     resolvers,
     logger: false,
   });
-  hasSetup = true;
-};
+})
 
-module.exports = cors(async (req, res) => {
-
-  if (!hasSetup) {
-    await setup();
-  }
-
+module.exports = cors( async (req, res) => {
+  
   const url = parse(req.url)
   if (url.pathname === '/graphiql') {
     return microGraphiql({ endpointURL: '/' })(req, res)
   }
 
   return microGraphql({ schema })(req, res)
-
 });
+
+
