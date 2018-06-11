@@ -1,0 +1,27 @@
+Update reviews on unis and cities using roboMongo Shell:
+
+db.getCollection('reviews').find().forEach(function (review) {
+	var id = review.university_id;
+
+	if (id.match(/^[0-9a-fA-F]{24}$/)) {
+		var uni = db.getCollection('universities').findOne({ _id: new ObjectId(id) });
+
+		if (uni) {
+			db.getCollection('universities').update(
+				{ _id: new ObjectId(id) },
+				{
+					$push:
+						{
+							reviews:
+								{
+									votes: 0,
+									text: review.uni_review,
+									date: review.date_submit,
+									_id: new ObjectId()
+								}
+						}
+				}
+			)
+		}
+	}
+});
